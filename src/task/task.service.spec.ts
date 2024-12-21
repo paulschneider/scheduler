@@ -10,7 +10,9 @@ import { generateSchedule } from '../schedule/schedule.service.spec';
 import { Task, StoredTask, TaskType } from '../types';
 import { Client } from '../supabase/supabase.service';
 import { TaskCreateDto } from './dto/task-create.dto';
+import { TaskUpdateDto } from './dto/task-update.dto';
 import { validate } from 'class-validator';
+import { InternalSystemError, ResourceNotFound } from '../exceptions';
 /**
  * Generate a task
  * 
@@ -39,7 +41,7 @@ const generateTask = ({ isStored = false }: { isStored?: boolean }): Task | Stor
  * @param task - The task to generate the dto for
  * @returns A task create dto
  */
-const generateTaskCreateDto = (task: Task | StoredTask): TaskCreateDto => {
+const generateTaskCreateDto = (task: Task): TaskCreateDto => {
   const taskCreateDto = new TaskCreateDto()
 
   taskCreateDto.accountId = task.account_id
@@ -49,6 +51,25 @@ const generateTaskCreateDto = (task: Task | StoredTask): TaskCreateDto => {
   taskCreateDto.type = task.type as TaskType
 
   return taskCreateDto
+};
+
+/**
+ * Generate a task update dto
+ * 
+ * @param task - The task to generate the dto for
+ * @returns A task update dto
+ */
+const generateTaskUpdateDto = (task: StoredTask): TaskUpdateDto => {
+  const taskUpdateDto = new TaskUpdateDto()
+
+  taskUpdateDto.id = task.id
+  taskUpdateDto.accountId = task.account_id
+  taskUpdateDto.scheduleId = task.schedule_id
+  taskUpdateDto.startTime = task.start_time.toISOString()
+  taskUpdateDto.duration = task.duration
+  taskUpdateDto.type = task.type as TaskType
+
+  return taskUpdateDto
 };
 
 /**
@@ -138,7 +159,7 @@ describe('TaskService', () => {
   /**
    * Test that the validation fails when the dto is invalid (missing required fields [accountId])
    */
-  it('should throw an error when an error occurs [accountId]', async () => {
+  it('should throw an error when a validation error occurs [accountId]', async () => {
     const task = generateTask({ isStored: false });
     const taskDto = generateTaskCreateDto(task);
 
@@ -156,7 +177,7 @@ describe('TaskService', () => {
   /**
    * Test that the validation fails when the dto is invalid (missing required fields [scheduleId empty])
    */
-  it('should throw an error when an error occurs [scheduleId empty]', async () => {
+  it('should throw an error when a validation error occurs [scheduleId empty]', async () => {
     const task = generateTask({ isStored: false });
     const taskDto = generateTaskCreateDto(task);
 
@@ -174,7 +195,7 @@ describe('TaskService', () => {
   /**
    * Test that the validation fails when the dto is invalid (missing required fields [startTime empty])
    */
-  it('should throw an error when an error occurs [startTime empty]', async () => {
+  it('should throw an error when a validation error occurs [startTime empty]', async () => {
     const task = generateTask({ isStored: false });
     const taskDto = generateTaskCreateDto(task);
 
@@ -192,7 +213,7 @@ describe('TaskService', () => {
   /**
    * Test that the validation fails when the dto is invalid (missing required fields [duration empty])
    */
-  it('should throw an error when an error occurs [duration empty]', async () => {
+  it('should throw an error when a validation error occurs [duration empty]', async () => {
     const task = generateTask({ isStored: false });
     const taskDto = generateTaskCreateDto(task);
 
@@ -212,7 +233,7 @@ describe('TaskService', () => {
   /**
    * Test that the validation fails when the dto is invalid (missing required fields [duration no number])
    */
-  it('should throw an error when an error occurs [duration not a number]', async () => {
+  it('should throw an error when a validation error occurs [duration not a number]', async () => {
     const task = generateTask({ isStored: false });
     const taskDto = generateTaskCreateDto(task);
 
@@ -229,9 +250,9 @@ describe('TaskService', () => {
   });
 
   /**
-   * Test that the validation fails when the dto is invalid (missing required fields [duration no number])
+   * Test that the validation fails when the dto is invalid (incorrect task type])
    */
-  it.only('should throw an error when an error occurs [incorrect task type]', async () => {
+  it('should throw an error when a validation error occurs [incorrect task type]', async () => {
     const task = generateTask({ isStored: false });
     const taskDto = generateTaskCreateDto(task);
 
@@ -245,5 +266,182 @@ describe('TaskService', () => {
         isEnum: 'type must be one of the following values: break, work'
       });
     });
+  });
+
+  /**
+   * Test that the service can update a task
+   */
+  it('should return a successful API response when updating a task', async () => {
+    const task = generateTask({ isStored: true });
+    const taskDto = generateTaskUpdateDto(task);
+
+    task.duration = 100
+
+    const expectedResponse = {
+      success: true,
+      message: 'Task updated successfully',
+      data: task
+    };
+
+    jest
+      .spyOn(service, 'updateTask')
+      .mockImplementation(() => Promise.resolve(expectedResponse));
+
+    const response = await service.updateTask(taskDto);
+
+    expect(response).toEqual(expectedResponse);
+  });
+
+  /**
+   * Test that the updateTask method throws an error when an error occurs
+   */
+  it('should handle an error when an error occurs', async () => {
+    const task = generateTask({ isStored: true });
+    const taskDto = generateTaskUpdateDto(task);
+
+    jest.spyOn(service, 'updateTask').mockRejectedValue(() => {
+      throw new InternalSystemError("There was a problem updating the task")
+    });
+
+    expect(async () => {
+      await service.updateTask(taskDto);
+    }).rejects.toThrow("There was a problem updating the task");
+  });
+
+  /**
+   * Test that we can retrieve a task by its ID
+   * 
+   */
+  it('should return a successful API response when retrieving a task by its ID', async () => {
+    const task = generateTask({ isStored: true });
+
+    const expectedResponse = {
+      success: true,
+      message: 'Task found',
+      data: task
+    };
+
+    jest
+      .spyOn(service, 'fetchTask')
+      .mockImplementation(() => Promise.resolve(expectedResponse));
+
+    const response = await service.fetchTask(task.id);
+
+    expect(response).toEqual(expectedResponse);
+  });
+
+  /**
+   * Test that the fetchTask method throws an error the task is not found
+   */
+  it('should handle an error when an error occurs', async () => {
+    const task = generateTask({ isStored: true });
+
+    jest.spyOn(service, 'fetchTask').mockRejectedValue(() => {
+      throw new ResourceNotFound("Task not found")
+    });
+
+    expect(async () => {
+      await service.fetchTask(task.id);
+    }).rejects.toThrow("Task not found");
+  });
+
+  /**
+   * Test that we can delete a task
+   */
+  it('should return a successful API response when deleting a task', async () => {
+    const task = generateTask({ isStored: true });
+
+    const expectedResponse = {
+      success: true,
+      message: 'Task deleted successfully',
+      data: null
+    };
+
+    jest
+      .spyOn(service, 'deleteTask')
+      .mockImplementation(() => Promise.resolve(expectedResponse));
+
+    const response = await service.deleteTask(task.id);
+
+    expect(response).toEqual(expectedResponse);
+  });
+
+  /**
+   * Test that the deleteTask method throws an error when the task is not found
+   */
+  it('should handle an error during task deletion [task not found]', async () => {
+    const task = generateTask({ isStored: true });
+
+    jest.spyOn(service, 'fetchTask').mockRejectedValue(() => {
+      throw new ResourceNotFound("Task not found")
+    });
+
+    expect(async () => {
+      await service.deleteTask(task.id);
+    }).rejects.toThrow("Task not found");
+  });
+
+  /**
+   * Test that the deleteTask method throws an error when there is a problem deleting the task
+   */
+  it('should handle an error during task deletion [problem deleting task]', async () => {
+    const task = generateTask({ isStored: true });
+
+    jest.spyOn(service, 'deleteTask').mockRejectedValue(() => {
+      throw new InternalSystemError("There was a problem deleting the task")
+    });
+
+    expect(async () => {
+      await service.deleteTask(task.id);
+    }).rejects.toThrow("There was a problem deleting the task");
+  });
+
+  /**
+   * Test that we can fetch all tasks for a given schedule
+   */
+  it('should return a successful API response when fetching all tasks for a given schedule', async () => {
+    const schedule = generateSchedule({ isStored: true });
+
+    const tasks = [
+      { ...generateTask({ isStored: true }), schedule_id: schedule.id },
+      { ...generateTask({ isStored: true }), schedule_id: schedule.id },
+      { ...generateTask({ isStored: true }), schedule_id: schedule.id }
+    ]
+
+    const expectedResponse = {
+      success: true,
+      message: 'Tasks found',
+      data: tasks
+    };
+
+    jest
+      .spyOn(service, 'fetchAll')
+      .mockImplementation(() => Promise.resolve(expectedResponse));
+
+    const response = await service.fetchAll(schedule.id);
+
+    expect(response).toEqual(expectedResponse);
+  });
+
+  /**
+   * Test that the fetchAll method throws an error when there is a problem fetching the tasks
+   */
+  it('should handle an error during task fetching [problem fetching tasks]', async () => {
+    const schedule = generateSchedule({ isStored: true });
+
+    jest.spyOn(service, 'fetchAll').mockRejectedValue(() => {
+      throw new InternalSystemError("There was a problem fetching the tasks");
+    });
+
+    expect(async () => {
+      await service.fetchAll(schedule.id);
+    }).rejects.toThrow("There was a problem fetching the tasks");
+  });
+
+  /**
+   * Test that the fetchAll method throws an error when there are no tasks found
+   */
+  it('should handle an error during task fetching [no tasks found]', async () => {
+    const schedule = generateSchedule({ isStored: true });
   });
 });
