@@ -7,14 +7,19 @@ import { createMock } from '@golevelup/ts-jest';
 import { ScheduleModule } from './schedule.module';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { faker } from '@faker-js/faker';
+import { Schedule, StoredSchedule } from '../types';
 
-const generateSchedule = () => {
-  return {
-    name: 'Schedule 1',
+export const generateSchedule = ({ isStored = false }: { isStored?: boolean }): Schedule | StoredSchedule => {
+  const schedule = {
+    name: 'Schedule ' + faker.helpers.arrayElement(['1', '2', '3', '4', '5']),
     description: faker.lorem.lines(2),
     start_date: new Date(),
     end_date: new Date(),
   };
+
+  return isStored ?
+    { id: faker.string.uuid(), ...schedule } as StoredSchedule
+    : schedule as Schedule;
 };
 
 describe('ScheduleService', () => {
@@ -54,14 +59,14 @@ describe('ScheduleService', () => {
    * Validate that the schedule can be created
    */
   it('should return a successful API response when creating a schedule', async () => {
-    const scheduleInsertData = generateSchedule();
+    const scheduleInsertData = generateSchedule({ isStored: false });
 
     const expectedResponse = {
       success: true,
       message: 'Schedule created successfully',
       data: {
-        id: faker.string.uuid(),
         ...scheduleInsertData,
+        id: faker.string.uuid(),
       },
     };
 
@@ -84,8 +89,8 @@ describe('ScheduleService', () => {
       success: true,
       message: 'Schedule found',
       data: {
-        id,
-        ...generateSchedule(),
+        ...generateSchedule({ isStored: true }),
+        id
       },
     };
 
@@ -128,9 +133,9 @@ describe('ScheduleService', () => {
       success: true,
       message: 'Schedules found',
       data: [
-        { id: faker.string.uuid(), ...generateSchedule() },
-        { id: faker.string.uuid(), ...generateSchedule() },
-        { id: faker.string.uuid(), ...generateSchedule() },
+        { ...generateSchedule({ isStored: true }), id: faker.string.uuid() },
+        { ...generateSchedule({ isStored: true }), id: faker.string.uuid() },
+        { ...generateSchedule({ isStored: true }), id: faker.string.uuid() },
       ],
     };
 
@@ -169,10 +174,9 @@ describe('ScheduleService', () => {
   it('should allow a schedule to be updated', async () => {
     const id = faker.string.uuid();
 
-    const existingSchedule = generateSchedule();
+    const existingSchedule = generateSchedule({ isStored: true });
 
     const updatedSchedule = {
-      id,
       ...existingSchedule,
       name: 'Updated Schedule name',
     };

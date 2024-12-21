@@ -5,3 +5,7 @@ export type Schedule = {
   start_date: Date;
   end_date: Date;
 };
+
+export type StoredSchedule = Schedule & {
+  id: string;
+};

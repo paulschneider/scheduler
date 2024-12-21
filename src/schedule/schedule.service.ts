@@ -6,7 +6,7 @@ import { Schedule } from '../types';
 export class ScheduleService {
   tableName = 'schedule';
 
-  constructor(private readonly client: Client) {}
+  constructor(private readonly client: Client) { }
 
   /**
    * Create a new schedule
@@ -23,7 +23,9 @@ export class ScheduleService {
       .select()
       .returns<Schedule>();
 
-    console.log(data, error);
+    if (error) {
+      throw new Error(error.message);
+    }
 
     return {
       success: true,
