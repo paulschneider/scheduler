@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Client } from '../supabase/supabase.service';
-import { Schedule } from '../types';
+import { Schedule, StoredSchedule } from '../types';
 import { ScheduleCreateDto } from './dto/schedule-create.dto';
 import { ScheduleUpdateDto } from './dto/schedule-update.dto';
 import { ResourceNotFound, InternalSystemError } from '../exceptions';
@@ -78,12 +78,12 @@ export class ScheduleService {
    * 
    * @param id 
    */
-  async fetchById(id: string): Promise<PostgrestSingleResponse<Schedule | null>> {
+  async fetchById(id: string): Promise<PostgrestSingleResponse<StoredSchedule | null>> {
     return Client.connection
       .from(this.tableName)
-      .select()
+      .select("*, task(*)")
       .eq('id', id)
-      .returns<Schedule | null>();
+      .returns<StoredSchedule | null>();
   }
 
   /**
