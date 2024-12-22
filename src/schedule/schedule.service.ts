@@ -81,7 +81,7 @@ export class ScheduleService {
   async fetchById(id: string): Promise<PostgrestSingleResponse<StoredSchedule | null>> {
     return Client.connection
       .from(this.tableName)
-      .select("*, task(*)")
+      .select("*, tasks(*)")
       .eq('id', id)
       .returns<StoredSchedule | null>();
   }

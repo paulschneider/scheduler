@@ -7,7 +7,7 @@ import { ResourceNotFound, InternalSystemError } from '../exceptions';
 
 @Injectable()
 export class TaskService {
-  tableName = 'task';
+  tableName = 'tasks';
 
   constructor(private readonly client: Client) { }
 
