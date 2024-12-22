@@ -20,6 +20,7 @@ import { StoredSchedule } from './types/schedule-types';
 describe('ScheduleController', () => {
   let controller: ScheduleController;
   let service: ScheduleService;
+
   beforeEach(async () => {
     const clientMock = createMock<SupabaseClient>();
 
@@ -82,7 +83,7 @@ describe('ScheduleController', () => {
 
     const expectedResponse = {
       success: true,
-      message: responses.schedule.create.success,
+      message: responses.schedule.fetch.success,
       data: schedule,
     };
 
@@ -134,7 +135,7 @@ describe('ScheduleController', () => {
 
   /**
    * We can call delete in the controller and it should return a successful response 
-   * indicating the 
+   * indicating the deletion of the schedule
    */
   it('should return a successful response when the delete method is called with valid data', async () => {
     const schedule = generateSchedule({ isStored: true }) as StoredSchedule;

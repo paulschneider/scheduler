@@ -17,7 +17,7 @@ import {
   generateTaskUpdateDto
 } from '../../test/helpers/generators';
 import { StoredSchedule } from 'src/types';
-
+import { responses } from '../common/messages/responses';
 /**
  * Initialise the test suite and mock dependencies, load the environment variables
  * 
@@ -79,7 +79,7 @@ describe('TaskService', () => {
 
     const expectedResponse = {
       success: true,
-      message: 'Task created successfully',
+      message: responses.task.create.success,
       data: {
         ...task,
         id: faker.string.uuid(),
@@ -98,13 +98,13 @@ describe('TaskService', () => {
   /**
    * Test that the createTask method throws an error when an error occurs
    */
-  it('should throw an error when an error occurs', async () => {
+  it('should throw an error when an error occurs [createTask]', async () => {
     const task = generateTask({ isStored: false });
     const taskDto = generateTaskCreateDto(task);
 
     const expectedResponse = {
       success: false,
-      message: 'Something went wrong',
+      message: responses.task.create.error,
       data: null,
     };
 
@@ -126,7 +126,7 @@ describe('TaskService', () => {
 
     const expectedResponse = {
       success: true,
-      message: 'Task updated successfully',
+      message: responses.task.update.success,
       data: task
     };
 
@@ -142,17 +142,17 @@ describe('TaskService', () => {
   /**
    * Test that the updateTask method throws an error when an error occurs
    */
-  it('should handle an error when an error occurs', async () => {
+  it('should handle an error when an error occurs [updateTask]', async () => {
     const task = generateTask({ isStored: true });
     const taskDto = generateTaskUpdateDto(task);
 
     jest.spyOn(service, 'updateTask').mockRejectedValue(() => {
-      throw new InternalSystemError("There was a problem updating the task")
+      throw new InternalSystemError(responses.task.update.error)
     });
 
     expect(async () => {
       await service.updateTask(taskDto);
-    }).rejects.toThrow("There was a problem updating the task");
+    }).rejects.toThrow(responses.task.update.error);
   });
 
   /**
@@ -164,7 +164,7 @@ describe('TaskService', () => {
 
     const expectedResponse = {
       success: true,
-      message: 'Task found',
+      message: responses.task.fetch.success,
       data: task
     };
 
@@ -180,16 +180,16 @@ describe('TaskService', () => {
   /**
    * Test that the fetchTask method throws an error the task is not found
    */
-  it('should handle an error when an error occurs', async () => {
+  it('should handle an error when an error occurs [fetchTask]', async () => {
     const task = generateTask({ isStored: true });
 
     jest.spyOn(service, 'fetchTask').mockRejectedValue(() => {
-      throw new ResourceNotFound("Task not found")
+      throw new ResourceNotFound(responses.task.fetch.notFound)
     });
 
     expect(async () => {
       await service.fetchTask(task.id);
-    }).rejects.toThrow("Task not found");
+    }).rejects.toThrow(responses.task.fetch.notFound);
   });
 
   /**
@@ -200,7 +200,7 @@ describe('TaskService', () => {
 
     const expectedResponse = {
       success: true,
-      message: 'Task deleted successfully',
+      message: responses.task.delete.success,
       data: null
     };
 
@@ -220,12 +220,12 @@ describe('TaskService', () => {
     const task = generateTask({ isStored: true });
 
     jest.spyOn(service, 'fetchTask').mockRejectedValue(() => {
-      throw new ResourceNotFound("Task not found")
+      throw new ResourceNotFound(responses.task.fetch.notFound)
     });
 
     expect(async () => {
       await service.deleteTask(task.id);
-    }).rejects.toThrow("Task not found");
+    }).rejects.toThrow(responses.task.fetch.notFound);
   });
 
   /**
@@ -235,12 +235,12 @@ describe('TaskService', () => {
     const task = generateTask({ isStored: true });
 
     jest.spyOn(service, 'deleteTask').mockRejectedValue(() => {
-      throw new InternalSystemError("There was a problem deleting the task")
+      throw new InternalSystemError(responses.task.delete.error)
     });
 
     expect(async () => {
       await service.deleteTask(task.id);
-    }).rejects.toThrow("There was a problem deleting the task");
+    }).rejects.toThrow(responses.task.delete.error);
   });
 
   /**
@@ -257,7 +257,7 @@ describe('TaskService', () => {
 
     const expectedResponse = {
       success: true,
-      message: 'Tasks found',
+      message: responses.task.fetchAll.success,
       data: tasks
     };
 
@@ -277,12 +277,12 @@ describe('TaskService', () => {
     const schedule = generateSchedule({ isStored: true }) as StoredSchedule;
 
     jest.spyOn(service, 'fetchAll').mockRejectedValue(() => {
-      throw new InternalSystemError("There was a problem fetching the tasks");
+      throw new InternalSystemError(responses.task.fetchAll.error);
     });
 
     expect(async () => {
       await service.fetchAll(schedule.id);
-    }).rejects.toThrow("There was a problem fetching the tasks");
+    }).rejects.toThrow(responses.task.fetchAll.error);
   });
 });
 

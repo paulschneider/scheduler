@@ -109,7 +109,7 @@ describe('Schedule (e2e)', () => {
       message: responses.schedule.update.success,
       data: {
         id: updatedSchedule.id,
-        account_id: 2,
+        account_id: 2, // validate that we got the updated account_id
         agent_id: updatedSchedule.agentId,
         start_time: updatedSchedule.startTime,
         end_time: updatedSchedule.endTime,

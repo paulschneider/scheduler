@@ -4,6 +4,7 @@ import { StoredTask } from '../types';
 import { TaskCreateDto } from './dto/task-create.dto';
 import { TaskUpdateDto } from './dto/task-update.dto';
 import { ResourceNotFound, InternalSystemError } from '../exceptions';
+import { responses } from '../common/messages/responses';
 
 @Injectable()
 export class TaskService {
@@ -27,14 +28,38 @@ export class TaskService {
     if (error || !data) {
       return {
         success: false,
-        message: 'There was a problem creating the task',
+        message: responses.task.create.error,
         data: null,
       };
     }
 
     return {
       success: true,
-      message: 'Task created successfully',
+      message: responses.task.create.success,
+      data: data[0]
+    };
+  }
+
+  /**
+   * Fetch a task by its ID
+   *
+   * @param id
+   * @returns
+   */
+  async fetchTask(id: string): Promise<{ success: boolean; message: string; data: StoredTask | null }> {
+    const { data, error } = await Client.connection
+      .from(this.tableName)
+      .select()
+      .eq('id', id)
+      .returns<StoredTask>();
+
+    if (error || !data) {
+      throw new ResourceNotFound(responses.task.fetch.notFound);
+    }
+
+    return {
+      success: true,
+      message: responses.task.fetch.success,
       data: data[0]
     };
   }
@@ -55,41 +80,17 @@ export class TaskService {
         .returns<StoredTask>();
 
       if (error || !data) {
-        throw new InternalSystemError("There was a problem updating the task");
+        throw new InternalSystemError(responses.task.update.error);
       }
 
       return {
         success: true,
-        message: 'Task updated successfully',
+        message: responses.task.update.success,
         data: data[0]
       };
     } catch (error) {
-      throw new InternalSystemError("There was a problem updating the task");
+      throw new InternalSystemError(responses.task.update.error);
     }
-  }
-
-  /**
-   * Fetch a task by its ID
-   *
-   * @param id
-   * @returns
-   */
-  async fetchTask(id: string): Promise<{ success: boolean; message: string; data: StoredTask | null }> {
-    const { data, error } = await Client.connection
-      .from(this.tableName)
-      .select()
-      .eq('id', id)
-      .returns<StoredTask>();
-
-    if (error || !data) {
-      throw new ResourceNotFound("Task not found");
-    }
-
-    return {
-      success: true,
-      message: 'Task found',
-      data: data[0]
-    };
   }
 
   /**
@@ -102,7 +103,7 @@ export class TaskService {
     const task = await this.fetchTask(id);
 
     if (!task.success) {
-      throw new ResourceNotFound("Task not found");
+      throw new ResourceNotFound(responses.task.delete.notFound);
     }
 
     const { error } = await Client.connection
@@ -113,12 +114,12 @@ export class TaskService {
       .returns<StoredTask>();
 
     if (error) {
-      throw new InternalSystemError("There was a problem deleting the task");
+      throw new InternalSystemError(responses.task.delete.error);
     }
 
     return {
       success: true,
-      message: 'Task deleted successfully',
+      message: responses.task.delete.success,
       data: null
     };
   }

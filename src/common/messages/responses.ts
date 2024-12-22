@@ -16,6 +16,23 @@ const SCHEDULE_DELETE_SUCCESS = 'Schedule deleted successfully';
 const SCHEDULE_DELETE_ERROR = 'There was a problem deleting the schedule';
 const SCHEDULE_DELETE_DATA_FOUND = 'Deleting the schedule failed';
 
+const TASK_CREATE_SUCCESS = 'Task created successfully';
+const TASK_CREATE_ERROR = 'There was a problem creating the task';
+
+const TASK_FETCH_SUCCESS = 'Task found';
+const TASK_FETCH_ERROR = 'There was a problem fetching the task';
+const TASK_FETCH_NOT_FOUND = 'Task not found';
+
+const TASK_UPDATE_SUCCESS = 'Task updated successfully';
+const TASK_UPDATE_ERROR = 'There was a problem updating the task';
+
+const TASK_DELETE_SUCCESS = 'Task deleted successfully';
+const TASK_DELETE_ERROR = 'There was a problem deleting the task';
+const TASK_DELETE_NOT_FOUND = 'Task not found';
+
+const TASK_FETCH_ALL_SUCCESS = 'Tasks found';
+const TASK_FETCH_ALL_ERROR = 'There was a problem fetching the tasks';
+
 export const responses = {
   schedule: {
     create: {
@@ -41,5 +58,29 @@ export const responses = {
       error: SCHEDULE_DELETE_ERROR,
       dataFound: SCHEDULE_DELETE_DATA_FOUND,
     },
-  }
-}
+  },
+  task: {
+    create: {
+      success: TASK_CREATE_SUCCESS,
+      error: TASK_CREATE_ERROR,
+    },
+    fetch: {
+      success: TASK_FETCH_SUCCESS,
+      error: TASK_FETCH_ERROR,
+      notFound: TASK_FETCH_NOT_FOUND,
+    },
+    update: {
+      success: TASK_UPDATE_SUCCESS,
+      error: TASK_UPDATE_ERROR,
+    },
+    delete: {
+      success: TASK_DELETE_SUCCESS,
+      error: TASK_DELETE_ERROR,
+      notFound: TASK_DELETE_NOT_FOUND,
+    },
+    fetchAll: {
+      success: TASK_FETCH_ALL_SUCCESS,
+      error: TASK_FETCH_ALL_ERROR,
+    },
+  },
+};
