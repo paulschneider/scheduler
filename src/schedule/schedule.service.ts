@@ -177,12 +177,10 @@ export class ScheduleService {
 
     // ^^^ ... So we'll do a separate check and if we don't 
     // find the schedule we know the delete worked
-    const { data: fetchData, error: fetchError } = await this.fetchById(deleteDto.id);
-
-    console.log("schedule", fetchData)
+    const { data: fetchData, error: _fetchError } = await this.fetchById(deleteDto.id);
 
     // If we have data then the delete failed
-    if (!fetchData) {
+    if (Object.keys(fetchData).length === 0) {
       return {
         success: true,
         message: responses.schedule.delete.success,

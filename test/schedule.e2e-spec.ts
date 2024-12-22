@@ -121,7 +121,7 @@ describe('Schedule (e2e)', () => {
   /**
  * We can delete an schedule with a DELETE request
  */
-  it.only('Can make a DELETE request to delete a schedule', async () => {
+  it('Can make a DELETE request to delete a schedule', async () => {
     // first create a schedule we can reliably update
     const newSchedule = generateSchedule({ isStored: false });
 
@@ -136,8 +136,12 @@ describe('Schedule (e2e)', () => {
       .delete('/schedule/' + res.body.data.id)
       .set('apiKey', apiKey)
       .send()
-    // .expect(200)
+      .expect(200)
 
-    console.log(response)
+    expect(response.body).toEqual(expect.objectContaining({
+      success: true,
+      message: responses.schedule.delete.success,
+      data: null
+    }))
   });
 });
