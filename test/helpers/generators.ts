@@ -1,4 +1,4 @@
-import { Schedule, StoredSchedule, Task, StoredTask, TaskType } from '../../src/types';
+import { Schedule, StoredSchedule, Task, StoredTask, TaskType, UpdatableTask } from '../../src/types';
 import { ScheduleCreateDto } from '../../src/schedule/dto/schedule-create.dto';
 import { ScheduleUpdateDto } from '../../src/schedule/dto/schedule-update.dto';
 import { TaskCreateDto } from '../../src/task/dto/task-create.dto';
@@ -64,20 +64,36 @@ export const generateScheduleUpdateDto = (schedule: StoredSchedule): ScheduleUpd
  * @param isStored - Whether the task should be fictionally stored in the database
  * @returns A task object (Task | StoredTask)
  */
-export const generateTask = ({ isStored = false }: { isStored?: boolean }): Task | StoredTask => {
+export const generateTask = ({ isStored = false }: { isStored?: boolean }): Task => {
   const schedule = generateSchedule({ isStored: true }) as StoredSchedule;
 
-  const task = {
-    accountId: faker.string.uuid(),
+  return {
+    accountId: faker.number.int({ min: 1, max: 180 }),
     scheduleId: schedule.id,
     startTime: new Date(),
     duration: faker.number.int({ min: 1, max: 180 }),
-    type: faker.helpers.arrayElement(["work", "break"]),
+    type: faker.helpers.arrayElement(["work", "break"]) as TaskType,
   };
+};
 
-  return isStored ?
-    { id: faker.string.uuid(), ...task } as StoredTask
-    : task as Task;
+/**
+ * Generate a mock stored task
+ * 
+ * @param isStored - Whether the task should be fictionally stored in the database
+ * @returns A task object (Task | StoredTask)
+ */
+export const generateStoredTask = ({ isStored = true }: { isStored?: boolean }): StoredTask => {
+  const schedule = generateSchedule({ isStored: true }) as StoredSchedule;
+
+  return {
+    id: faker.string.uuid(),
+    account_id: faker.number.int({ min: 1, max: 180 }),
+    schedule_id: schedule.id,
+    start_time: new Date(),
+    duration: faker.number.int({ min: 1, max: 180 }),
+    type: faker.helpers.arrayElement(["work", "break"]) as TaskType,
+    created_at: new Date(),
+  };
 };
 
 /**
@@ -104,7 +120,7 @@ export const generateTaskCreateDto = (task: Task): TaskCreateDto => {
  * @param task - The task to generate the dto for
  * @returns A task update dto
  */
-export const generateTaskUpdateDto = (task: StoredTask): TaskUpdateDto => {
+export const generateTaskUpdateDto = (task: UpdatableTask): TaskUpdateDto => {
   const taskUpdateDto = new TaskUpdateDto()
 
   taskUpdateDto.id = task.id

@@ -1,13 +1,13 @@
-import { IsNotEmpty, IsNumber, IsString, Matches, IsEnum } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString, IsEnum, IsUUID } from 'class-validator';
 import { TaskType } from '../../types';
 
 export class TaskCreateDto {
   @IsNotEmpty()
-  @IsString()
-  accountId: string;
+  @IsNumber()
+  accountId: number;
 
   @IsNotEmpty()
-  @IsString()
+  @IsUUID()
   scheduleId: string;
 
   @IsNotEmpty()

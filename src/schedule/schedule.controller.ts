@@ -1,4 +1,4 @@
-import { Controller, Body, Query, Get, Post, Put, Delete, Param, ValidationPipe } from '@nestjs/common';
+import { Controller, Body, Query, Get, Post, Put, Delete, Param, UsePipes, ValidationPipe } from '@nestjs/common';
 import { ScheduleService } from './schedule.service';
 import { ApiResponse, Schedule } from '../types';
 import { ScheduleFetchDto } from './dto/schedule-fetch.dto';
@@ -18,6 +18,7 @@ export class ScheduleController {
    * @returns 
    */
   @Get(':id')
+  @UsePipes(new ValidationPipe({ transform: true }))
   async fetch(@Param() params: ScheduleFetchDto): Promise<ApiResponse<Schedule | null>> {
     return this.scheduleService.fetch(params);
   }
@@ -39,6 +40,7 @@ export class ScheduleController {
    * @returns 
    */
   @Post()
+  @UsePipes(new ValidationPipe({ transform: true }))
   async create(@Body() scheduleCreateDto: ScheduleCreateDto): Promise<ApiResponse<Schedule | null>> {
     return this.scheduleService.createSchedule(scheduleCreateDto);
   }
@@ -50,6 +52,7 @@ export class ScheduleController {
    * @returns 
    */
   @Put()
+  @UsePipes(new ValidationPipe({ transform: true }))
   async update(@Body() scheduleUpdateDto: ScheduleUpdateDto): Promise<ApiResponse<Schedule | null>> {
     return this.scheduleService.updateSchedule(scheduleUpdateDto);
   }
@@ -61,6 +64,7 @@ export class ScheduleController {
    * @returns 
    */
   @Delete(':id')
+  @UsePipes(new ValidationPipe({ transform: true }))
   async delete(@Param() params: ScheduleDeleteDto): Promise<ApiResponse<null | Error>> {
     return this.scheduleService.deleteSchedule(params);
   }

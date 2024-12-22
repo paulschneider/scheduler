@@ -175,7 +175,7 @@ describe('TaskController', () => {
       .spyOn(service, 'fetchAll')
       .mockImplementation(() => Promise.resolve(expectedResponse));
 
-    const response = await controller.fetchAll({ scheduleId: schedule.id });
+    const response = await controller.fetchAll();
 
     expect(response).toEqual(expectedResponse);
   });

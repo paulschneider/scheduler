@@ -265,7 +265,7 @@ describe('TaskService', () => {
       .spyOn(service, 'fetchAll')
       .mockImplementation(() => Promise.resolve(expectedResponse));
 
-    const response = await service.fetchAll(schedule.id);
+    const response = await service.fetchAll();
 
     expect(response).toEqual(expectedResponse);
   });
@@ -281,7 +281,7 @@ describe('TaskService', () => {
     });
 
     expect(async () => {
-      await service.fetchAll(schedule.id);
+      await service.fetchAll();
     }).rejects.toThrow(responses.task.fetchAll.error);
   });
 });
@@ -294,13 +294,15 @@ describe('TaskService Validation', () => {
     const task = generateTask({ isStored: false });
     const taskDto = generateTaskCreateDto(task);
 
-    taskDto.accountId = ""
+    // @ts-ignore
+    taskDto.accountId = null
 
     validate(taskDto).then(errors => {
       expect(errors.length).toEqual(1);
 
       expect(errors[0].constraints).toEqual({
         isNotEmpty: 'accountId should not be empty',
+        isNumber: 'accountId must be a number conforming to the specified constraints'
       });
     });
   });
@@ -312,13 +314,15 @@ describe('TaskService Validation', () => {
     const task = generateTask({ isStored: false });
     const taskDto = generateTaskCreateDto(task);
 
-    taskDto.scheduleId = ""
+    // @ts-ignore
+    taskDto.scheduleId = null
 
     validate(taskDto).then(errors => {
       expect(errors.length).toEqual(1);
 
       expect(errors[0].constraints).toEqual({
-        isNotEmpty: 'scheduleId should not be empty',
+        isUuid: 'scheduleId must be a UUID',
+        isNotEmpty: 'scheduleId should not be empty'
       });
     });
   });

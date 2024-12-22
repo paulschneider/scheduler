@@ -1,14 +1,23 @@
 export type Task = {
-  id: string;
-  accountId: string;
+  accountId: number;
   scheduleId: string;
   startTime: Date;
   duration: number;
-  type: 'break' | 'work';
+  type: TaskType;
 };
 
-export type StoredTask = Task & {
+export type UpdatableTask = Task & {
   id: string;
+};
+
+export type StoredTask = {
+  id: string;
+  account_id: number;
+  schedule_id: string;
+  start_time: Date;
+  duration: number;
+  type: TaskType;
+  created_at: Date;
 };
 
 export enum TaskType {

@@ -1,4 +1,4 @@
-import { Task } from "../../types";
+import { StoredTask } from "../../types";
 
 export type Schedule = {
   accountId: number;
@@ -7,7 +7,16 @@ export type Schedule = {
   endTime: Date;
 };
 
+export type UpdatableSchedule = Schedule & {
+  id: string;
+};
+
 export type StoredSchedule = Schedule & {
   id: string;
-  tasks: Task[];
+  account_id: number;
+  agent_id: number;
+  start_time: Date;
+  end_time: Date;
+  tasks: StoredTask[];
+  created_at: Date;
 };

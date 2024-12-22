@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Query, Put, Delete, Param } from '@nestjs/common';
+import { Controller, Post, Body, Get, Query, Put, Delete, Param, UsePipes, ValidationPipe } from '@nestjs/common';
 import { TaskService } from './task.service';
 import { StoredTask } from './types/task-types';
 import { TaskCreateDto } from './dto/task-create.dto';
@@ -6,7 +6,6 @@ import { TaskFetchDto } from './dto/task-fetch.dto';
 import { ApiResponse } from 'src/types';
 import { TaskUpdateDto } from './dto/task-update.dto';
 import { TaskDeleteDto } from './dto/task-delete.dto';
-import { TaskFetchAllForScheduleDto } from './dto/task-fetchAllForSchedule.dto';
 
 @Controller('task')
 export class TaskController {
@@ -20,8 +19,20 @@ export class TaskController {
    * @returns
    */
   @Post()
+  @UsePipes(new ValidationPipe({ transform: true }))
   async create(@Body() taskCreateDto: TaskCreateDto): Promise<ApiResponse<StoredTask | Error>> {
     return this.taskService.createTask(taskCreateDto);
+  }
+
+  /**
+   * Fetch all tasks
+   * 
+   * @returns 
+   */
+  @Get('all')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async fetchAll(): Promise<ApiResponse<StoredTask[]>> {
+    return this.taskService.fetchAll();
   }
 
   /**
@@ -31,18 +42,9 @@ export class TaskController {
    * @returns
    */
   @Get(':id')
+  @UsePipes(new ValidationPipe({ transform: true }))
   async fetch(@Param() params: TaskFetchDto): Promise<ApiResponse<StoredTask | Error>> {
     return this.taskService.fetchTask(params.id);
-  }
-
-  /**
-   * Fetch all tasks
-   * 
-   * @returns 
-   */
-  @Get()
-  async fetchAll(@Param() params: TaskFetchAllForScheduleDto): Promise<ApiResponse<StoredTask[]>> {
-    return this.taskService.fetchAll(params.scheduleId);
   }
 
   /**
@@ -52,6 +54,7 @@ export class TaskController {
    * @returns
    */
   @Put()
+  @UsePipes(new ValidationPipe({ transform: true }))
   async update(@Body() taskUpdateDto: TaskUpdateDto): Promise<ApiResponse<StoredTask | Error>> {
     return this.taskService.updateTask(taskUpdateDto);
   }
@@ -63,6 +66,7 @@ export class TaskController {
    * @returns
    */
   @Delete(':id')
+  @UsePipes(new ValidationPipe({ transform: true }))
   async delete(@Param() params: TaskDeleteDto): Promise<ApiResponse<StoredTask | Error>> {
     return this.taskService.deleteTask(params.id);
   }

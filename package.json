@@ -25,7 +25,8 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "test:e2e:watch": "jest --config ./test/jest-e2e.json --watch",
     "test:e2e:watch:task": "jest --config ./test/jest-e2e.json --watch ./test/task.e2e-spec.ts",
-    "test:e2e:watch:schedule": "jest --config ./test/jest-e2e.json --watch ./test/schedule.e2e-spec.ts"
+    "test:e2e:watch:schedule": "jest --config ./test/jest-e2e.json --watch ./test/schedule.e2e-spec.ts",
+    "test:all": "npm run test && npm run test:e2e"
   },
   "dependencies": {
     "@faker-js/faker": "^9.3.0",
