@@ -77,6 +77,12 @@ export class TaskService {
    * @returns
    */
   async updateTask(taskUpdateData: TaskUpdateDto): Promise<{ success: boolean; message: string; data: StoredTask | Error }> {
+    const task = await this.fetchTask(taskUpdateData.id);
+
+    if (!task.success) {
+      throw new ResourceNotFound(responses.task.delete.notFound);
+    }
+
     try {
       const { data, error } = await Client.connection
         .from(this.tableName)
@@ -91,7 +97,7 @@ export class TaskService {
         .select()
         .returns<StoredTask>();
 
-      if (error || !data) {
+      if (error) {
         throw new InternalSystemError(responses.task.update.error);
       }
 
