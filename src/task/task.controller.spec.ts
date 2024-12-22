@@ -7,11 +7,11 @@ import { TaskModule } from './task.module';
 import { Client } from '../supabase/supabase.service';
 import { createMock } from '@golevelup/ts-jest';
 import { SupabaseClient } from '@supabase/supabase-js';
-import { generateTask, generateTaskUpdateDto } from '../../test/helpers/generators';
+import { generateTask, generateTaskUpdateDto, generateSchedule } from '../../test/helpers/generators';
 import { generateTaskCreateDto } from '../../test/helpers/generators';
 import { responses } from '../common/messages/responses';
 import { TaskFetchDto } from './dto/task-fetch.dto';
-import { TaskType } from './types/task-types';
+import { TaskType, StoredSchedule } from '../types';
 import { TaskDeleteDto } from './dto/task-delete.dto';
 
 describe('TaskController', () => {
@@ -21,7 +21,7 @@ describe('TaskController', () => {
   beforeEach(async () => {
     const clientMock = createMock<SupabaseClient>();
 
-    const moduleRef = await Test.createTestingModule({
+    const moduleRef: TestingModule = await Test.createTestingModule({
       imports: [
         ConfigModule.forRoot({
           envFilePath: '.test.env',
@@ -159,13 +159,15 @@ describe('TaskController', () => {
    * We can call fetchAll in the controller and it should return a successful response with all task data
    */
   it('should return a successful response when the fetchAll method is called with valid data', async () => {
+    const schedule = generateSchedule({ isStored: true }) as StoredSchedule;
+
     const expectedResponse = {
       success: true,
       message: responses.task.fetchAll.success,
       data: [
-        generateTask({ isStored: true }),
-        generateTask({ isStored: true }),
-        generateTask({ isStored: true }),
+        { ...generateTask({ isStored: true }), scheduleId: schedule.id },
+        { ...generateTask({ isStored: true }), scheduleId: schedule.id },
+        { ...generateTask({ isStored: true }), scheduleId: schedule.id },
       ],
     };
 
@@ -173,7 +175,7 @@ describe('TaskController', () => {
       .spyOn(service, 'fetchAll')
       .mockImplementation(() => Promise.resolve(expectedResponse));
 
-    const response = await controller.fetchAll();
+    const response = await controller.fetchAll({ scheduleId: schedule.id });
 
     expect(response).toEqual(expectedResponse);
   });

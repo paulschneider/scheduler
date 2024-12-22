@@ -6,9 +6,11 @@ import { TaskFetchDto } from './dto/task-fetch.dto';
 import { ApiResponse } from 'src/types';
 import { TaskUpdateDto } from './dto/task-update.dto';
 import { TaskDeleteDto } from './dto/task-delete.dto';
+import { TaskFetchAllForScheduleDto } from './dto/task-fetchAllForSchedule.dto';
 
 @Controller('task')
 export class TaskController {
+
   constructor(private readonly taskService: TaskService) { }
 
   /**
@@ -34,6 +36,16 @@ export class TaskController {
   }
 
   /**
+   * Fetch all tasks
+   * 
+   * @returns 
+   */
+  @Get()
+  async fetchAll(@Param() params: TaskFetchAllForScheduleDto): Promise<ApiResponse<StoredTask[]>> {
+    return this.taskService.fetchAll(params.scheduleId);
+  }
+
+  /**
    * Update a task
    *
    * @param taskUpdateDto
@@ -53,15 +65,5 @@ export class TaskController {
   @Delete(':id')
   async delete(@Param() params: TaskDeleteDto): Promise<ApiResponse<StoredTask | Error>> {
     return this.taskService.deleteTask(params.id);
-  }
-
-  /**
-   * Fetch all tasks
-   * 
-   * @returns 
-   */
-  @Get()
-  async fetchAll(): Promise<ApiResponse<StoredTask[]>> {
-    return this.taskService.fetchAll();
   }
 }

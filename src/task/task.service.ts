@@ -130,10 +130,11 @@ export class TaskService {
    * @param scheduleId
    * @returns
    */
-  async fetchAll(): Promise<{ success: boolean; message: string; data: StoredTask[] }> {
+  async fetchAll(scheduleId: string): Promise<{ success: boolean; message: string; data: StoredTask[] }> {
     const { data, error } = await Client.connection
       .from(this.tableName)
       .select()
+      .eq('schedule_id', scheduleId)
       .returns<StoredTask[]>();
 
     if (error) {
