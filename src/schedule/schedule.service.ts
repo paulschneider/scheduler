@@ -12,6 +12,7 @@ import { PostgrestSingleResponse } from '@supabase/supabase-js'
 @Injectable()
 export class ScheduleService {
   tableName = 'schedule';
+  responseFields = "*, tasks(*)"
 
   constructor(private readonly client: Client) { }
 
@@ -32,7 +33,7 @@ export class ScheduleService {
         "start_time": scheduleInsertData.startTime,
         "end_time": scheduleInsertData.endTime,
       })
-      .select()
+      .select(this.responseFields)
       .returns<Schedule>();
 
     if (error) {
@@ -81,7 +82,7 @@ export class ScheduleService {
   async fetchById(id: string): Promise<PostgrestSingleResponse<StoredSchedule | null>> {
     return Client.connection
       .from(this.tableName)
-      .select("*, tasks(*)")
+      .select(this.responseFields)
       .eq('id', id)
       .returns<StoredSchedule | null>();
   }
@@ -98,7 +99,7 @@ export class ScheduleService {
   }> {
     const { data, error } = await Client.connection
       .from(this.tableName)
-      .select()
+      .select(this.responseFields)
       .returns<Schedule[]>();
 
     if (error) {
@@ -119,7 +120,7 @@ export class ScheduleService {
    * @param scheduleUpdateData
    * @returns
    */
-  async updateSchedule(scheduleUpdateData: ScheduleUpdateDto): Promise<{ success: boolean; message: string; data: Schedule }> {
+  async updateSchedule(scheduleUpdateData: ScheduleUpdateDto): Promise<{ success: boolean; message: string; data: StoredSchedule }> {
     const { data: fetchData, error: fetchError } = await this.fetchById(scheduleUpdateData.id);
 
     if (!fetchData) {
@@ -135,8 +136,8 @@ export class ScheduleService {
         "end_time": scheduleUpdateData.endTime
       })
       .eq('id', scheduleUpdateData.id)
-      .select()
-      .returns<Schedule>();
+      .select(this.responseFields)
+      .returns<StoredSchedule>();
 
     if (error) {
       throw new InternalSystemError(responses.schedule.update.error);

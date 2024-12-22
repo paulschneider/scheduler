@@ -113,7 +113,8 @@ describe('Schedule (e2e)', () => {
         agent_id: updatedSchedule.agentId,
         start_time: updatedSchedule.startTime,
         end_time: updatedSchedule.endTime,
-        created_at: data.created_at
+        created_at: data.created_at,
+        tasks: data.tasks
       }
     }))
   });

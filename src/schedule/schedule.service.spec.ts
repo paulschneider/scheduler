@@ -348,7 +348,7 @@ describe('ScheduleService Validation', () => {
   /**
    * Test that the validation fails when the dto is invalid (agentId empty/missing) - create
    */
-  it('should throw an error when a validation error occurs [description missing]', async () => {
+  it('should throw an error when a validation error occurs [agentId missing]', async () => {
     const schedule = generateSchedule({ isStored: false });
     const scheduleDto = generateScheduleCreateDto(schedule);
 
@@ -397,7 +397,7 @@ describe('ScheduleService Validation', () => {
       expect(errors.length).toEqual(1);
 
       expect(errors[0].constraints).toEqual({
-        isNotEmpty: 'end_time should not be empty'
+        isNotEmpty: 'endTime should not be empty'
       });
     });
   });
@@ -406,7 +406,6 @@ describe('ScheduleService Validation', () => {
    * Test that the validation fails when the dto is invalid (ID empty/missing)
    */
   it('should throw an error when a validation error occurs [ID missing] for update', async () => {
-    const schedule = generateSchedule({ isStored: true });
     const fetchDto = new ScheduleFetchDto();
 
     // @ts-ignore
