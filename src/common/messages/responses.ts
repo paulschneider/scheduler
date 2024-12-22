@@ -32,7 +32,7 @@ const TASK_DELETE_NOT_FOUND = 'Task not found';
 
 const TASK_FETCH_ALL_SUCCESS = 'Tasks found';
 const TASK_FETCH_ALL_ERROR = 'There was a problem fetching the tasks';
-
+const TASK_FETCH_ALL_NOT_FOUND = 'Tasks not found';
 export const responses = {
   schedule: {
     create: {
@@ -81,6 +81,7 @@ export const responses = {
     fetchAll: {
       success: TASK_FETCH_ALL_SUCCESS,
       error: TASK_FETCH_ALL_ERROR,
+      notFound: TASK_FETCH_ALL_NOT_FOUND,
     },
   },
 };

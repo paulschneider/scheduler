@@ -154,4 +154,27 @@ describe('TaskController', () => {
 
     expect(response).toEqual(expectedResponse);
   });
+
+  /**
+   * We can call fetchAll in the controller and it should return a successful response with all task data
+   */
+  it('should return a successful response when the fetchAll method is called with valid data', async () => {
+    const expectedResponse = {
+      success: true,
+      message: responses.task.fetchAll.success,
+      data: [
+        generateTask({ isStored: true }),
+        generateTask({ isStored: true }),
+        generateTask({ isStored: true }),
+      ],
+    };
+
+    jest
+      .spyOn(service, 'fetchAll')
+      .mockImplementation(() => Promise.resolve(expectedResponse));
+
+    const response = await controller.fetchAll();
+
+    expect(response).toEqual(expectedResponse);
+  });
 });

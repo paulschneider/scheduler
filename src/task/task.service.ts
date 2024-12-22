@@ -130,24 +130,23 @@ export class TaskService {
    * @param scheduleId
    * @returns
    */
-  async fetchAll(scheduleId: string): Promise<{ success: boolean; message: string; data: StoredTask[] }> {
+  async fetchAll(): Promise<{ success: boolean; message: string; data: StoredTask[] }> {
     const { data, error } = await Client.connection
       .from(this.tableName)
       .select()
-      .eq('schedule_id', scheduleId)
       .returns<StoredTask[]>();
 
     if (error) {
-      throw new InternalSystemError("There was a problem fetching the tasks");
+      throw new InternalSystemError(responses.task.fetchAll.error);
     }
 
     if (!data) {
-      throw new ResourceNotFound("Tasks not found");
+      throw new ResourceNotFound(responses.task.fetchAll.notFound);
     }
 
     return {
       success: true,
-      message: 'Tasks found',
+      message: responses.task.fetchAll.success,
       data: data
     };
   }

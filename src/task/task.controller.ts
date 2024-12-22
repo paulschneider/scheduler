@@ -54,4 +54,14 @@ export class TaskController {
   async delete(@Param() params: TaskDeleteDto): Promise<ApiResponse<StoredTask | Error>> {
     return this.taskService.deleteTask(params.id);
   }
+
+  /**
+   * Fetch all tasks
+   * 
+   * @returns 
+   */
+  @Get()
+  async fetchAll(): Promise<ApiResponse<StoredTask[]>> {
+    return this.taskService.fetchAll();
+  }
 }

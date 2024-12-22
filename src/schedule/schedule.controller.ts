@@ -23,6 +23,16 @@ export class ScheduleController {
   }
 
   /**
+   * Fetch all schedules
+   * 
+   * @returns 
+   */
+  @Get()
+  async fetchAll(): Promise<ApiResponse<Schedule[]>> {
+    return this.scheduleService.fetchAll();
+  }
+
+  /**
    * Create a schedule
    * 
    * @param scheduleCreateDto 
