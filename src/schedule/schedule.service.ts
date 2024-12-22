@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { Client } from '../supabase/supabase.service';
 import { Schedule } from '../types';
+import { ScheduleCreateDto } from './dto/schedule-create.dto';
+import { ScheduleUpdateDto } from './dto/schedule-update.dto';
+import { ResourceNotFound, InternalSystemError } from '../exceptions';
+import { ScheduleFetchDto } from './dto/schedule-fetch.dto';
 
 @Injectable()
 export class ScheduleService {
@@ -15,7 +19,7 @@ export class ScheduleService {
    * @returns
    */
   async createSchedule(
-    scheduleInsertData,
+    scheduleInsertData: ScheduleCreateDto,
   ): Promise<{ success: boolean; message: string; data: Schedule }> {
     const { data, error } = await Client.connection
       .from(this.tableName)
@@ -24,7 +28,7 @@ export class ScheduleService {
       .returns<Schedule>();
 
     if (error) {
-      throw new Error(error.message);
+      throw new InternalSystemError("There was a problem creating the schedule");
     }
 
     return {
@@ -40,21 +44,21 @@ export class ScheduleService {
    * @param id
    * @returns
    */
-  async fetchSchedule(
-    id: string,
+  async fetch(
+    fetchDto: ScheduleFetchDto,
   ): Promise<{ success: boolean; message: string; data: Schedule | null }> {
     const { data, error } = await Client.connection
       .from(this.tableName)
       .select()
-      .eq('id', id)
+      .eq('id', fetchDto.id)
       .returns<Schedule>();
 
-    if (error || !data) {
-      return {
-        success: false,
-        message: 'Not found',
-        data: null,
-      };
+    if (error) {
+      throw new InternalSystemError("There was a problem fetching the schedule");
+    }
+
+    if (!data) {
+      throw new ResourceNotFound("Schedule not found");
     }
 
     return {
@@ -79,12 +83,8 @@ export class ScheduleService {
       .select()
       .returns<Schedule[]>();
 
-    if (error || !data) {
-      return {
-        success: false,
-        message: 'No schedules found',
-        data: [],
-      };
+    if (error) {
+      throw new InternalSystemError("There was a problem fetching all schedules");
     }
 
     return {
@@ -101,23 +101,16 @@ export class ScheduleService {
    * @param scheduleUpdateData
    * @returns
    */
-  async updateSchedule(
-    id: string,
-    scheduleUpdateData: Schedule,
-  ): Promise<{ success: boolean; message: string; data: Schedule }> {
+  async updateSchedule(scheduleUpdateData: ScheduleUpdateDto): Promise<{ success: boolean; message: string; data: Schedule }> {
     const { data, error } = await Client.connection
       .from(this.tableName)
       .update(scheduleUpdateData)
-      .eq('id', id)
+      .eq('id', scheduleUpdateData.id)
       .select()
       .returns<Schedule>();
 
-    if (error || !data) {
-      return {
-        success: false,
-        message: 'Not found',
-        data: null,
-      };
+    if (error) {
+      throw new ResourceNotFound("Schedule not found");
     }
 
     return {

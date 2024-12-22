@@ -1,27 +1,7 @@
-import { IsNotEmpty, IsNumber, IsString, Matches, IsEnum } from 'class-validator';
-import { TaskType } from '../../types';
+import { IsUUID } from 'class-validator';
+import { TaskCreateDto } from './task-create.dto';
 
-export class TaskUpdateDto {
-  @IsNotEmpty()
+export class TaskUpdateDto extends TaskCreateDto {
+  @IsUUID()
   id: string;
-
-  @IsNotEmpty()
-  @IsString()
-  accountId: string;
-
-  @IsNotEmpty()
-  @IsString()
-  scheduleId: string;
-
-  @IsNotEmpty()
-  @IsString()
-  startTime: string;
-
-  @IsNotEmpty()
-  @IsNumber()
-  duration: number;
-
-  @IsNotEmpty()
-  @IsEnum(TaskType)
-  type: TaskType;
 }

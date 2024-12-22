@@ -1,15 +1,15 @@
 import { IsNotEmpty } from 'class-validator';
 
-export class ScheduleDto {
+export class ScheduleCreateDto {
   @IsNotEmpty()
-  userId: string;
+  name: string;
 
   @IsNotEmpty()
-  action: string;
+  description: string;
 
   @IsNotEmpty()
-  entityId: string;
+  startDate: string;
 
   @IsNotEmpty()
-  recoveryPath: string;
+  endDate: string;
 }

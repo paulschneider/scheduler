@@ -11,15 +11,17 @@ import { Task, StoredTask, TaskType } from '../types';
 import { Client } from '../supabase/supabase.service';
 import { TaskCreateDto } from './dto/task-create.dto';
 import { TaskUpdateDto } from './dto/task-update.dto';
+import { TaskFetchDto } from './dto/task-fetch.dto';
 import { validate } from 'class-validator';
 import { InternalSystemError, ResourceNotFound } from '../exceptions';
+
 /**
  * Generate a task
  * 
  * @param isStored - Whether the task should be fictionally stored in the database
  * @returns A task object (Task | StoredTask)
  */
-const generateTask = ({ isStored = false }: { isStored?: boolean }): Task | StoredTask => {
+export const generateTask = ({ isStored = false }: { isStored?: boolean }): Task | StoredTask => {
   const schedule = generateSchedule({ isStored: true });
 
   const task = {
@@ -73,6 +75,38 @@ const generateTaskUpdateDto = (task: StoredTask): TaskUpdateDto => {
 };
 
 /**
+ * Initialise the test suite and mock dependencies, load the environment variables
+ * 
+ * @returns The schedule service
+ */
+const initialiseTestSuite = async () => {
+  let service: TaskService;
+
+  const clientMock = createMock<SupabaseClient>();
+
+  const module: TestingModule = await Test.createTestingModule({
+    imports: [
+      ConfigModule.forRoot({
+        envFilePath: '.test.env',
+        load: [configuration],
+      }),
+      TaskModule,
+    ],
+    providers: [
+      Client,
+      { provide: Client, useValue: clientMock },
+      TaskService
+    ],
+  }).compile();
+
+  service = module.get<TaskService>(TaskService);
+
+  expect(clientMock).toBeDefined();
+
+  return service
+}
+
+/**
  * Test the TaskService
  */
 describe('TaskService', () => {
@@ -82,26 +116,7 @@ describe('TaskService', () => {
    * Setup the service before each test
    */
   beforeEach(async () => {
-    const clientMock = createMock<SupabaseClient>();
-
-    const module: TestingModule = await Test.createTestingModule({
-      imports: [
-        ConfigModule.forRoot({
-          envFilePath: '.test.env',
-          load: [configuration],
-        }),
-        TaskModule,
-      ],
-      providers: [
-        Client,
-        { provide: Client, useValue: clientMock },
-        TaskService
-      ],
-    }).compile();
-
-    service = module.get<TaskService>(TaskService);
-
-    expect(clientMock).toBeDefined();
+    service = await initialiseTestSuite()
   });
 
   /**
@@ -154,118 +169,6 @@ describe('TaskService', () => {
     const response = await service.createTask(taskDto);
 
     expect(response).toEqual(expectedResponse);
-  });
-
-  /**
-   * Test that the validation fails when the dto is invalid (missing required fields [accountId])
-   */
-  it('should throw an error when a validation error occurs [accountId]', async () => {
-    const task = generateTask({ isStored: false });
-    const taskDto = generateTaskCreateDto(task);
-
-    taskDto.accountId = ""
-
-    validate(taskDto).then(errors => {
-      expect(errors.length).toEqual(1);
-
-      expect(errors[0].constraints).toEqual({
-        isNotEmpty: 'accountId should not be empty',
-      });
-    });
-  });
-
-  /**
-   * Test that the validation fails when the dto is invalid (missing required fields [scheduleId empty])
-   */
-  it('should throw an error when a validation error occurs [scheduleId empty]', async () => {
-    const task = generateTask({ isStored: false });
-    const taskDto = generateTaskCreateDto(task);
-
-    taskDto.scheduleId = ""
-
-    validate(taskDto).then(errors => {
-      expect(errors.length).toEqual(1);
-
-      expect(errors[0].constraints).toEqual({
-        isNotEmpty: 'scheduleId should not be empty',
-      });
-    });
-  });
-
-  /**
-   * Test that the validation fails when the dto is invalid (missing required fields [startTime empty])
-   */
-  it('should throw an error when a validation error occurs [startTime empty]', async () => {
-    const task = generateTask({ isStored: false });
-    const taskDto = generateTaskCreateDto(task);
-
-    taskDto.startTime = ""
-
-    validate(taskDto).then(errors => {
-      expect(errors.length).toEqual(1);
-
-      expect(errors[0].constraints).toEqual({
-        isNotEmpty: 'startTime should not be empty',
-      });
-    });
-  });
-
-  /**
-   * Test that the validation fails when the dto is invalid (missing required fields [duration empty])
-   */
-  it('should throw an error when a validation error occurs [duration empty]', async () => {
-    const task = generateTask({ isStored: false });
-    const taskDto = generateTaskCreateDto(task);
-
-    // @ts-ignore
-    taskDto.duration = ""
-
-    validate(taskDto).then(errors => {
-      expect(errors.length).toEqual(1);
-
-      expect(errors[0].constraints).toEqual({
-        isNumber: 'duration must be a number conforming to the specified constraints',
-        isNotEmpty: 'duration should not be empty'
-      });
-    });
-  });
-
-  /**
-   * Test that the validation fails when the dto is invalid (missing required fields [duration no number])
-   */
-  it('should throw an error when a validation error occurs [duration not a number]', async () => {
-    const task = generateTask({ isStored: false });
-    const taskDto = generateTaskCreateDto(task);
-
-    // @ts-ignore
-    taskDto.duration = "not a number"
-
-    validate(taskDto).then(errors => {
-      expect(errors.length).toEqual(1);
-
-      expect(errors[0].constraints).toEqual({
-        isNumber: 'duration must be a number conforming to the specified constraints'
-      });
-    });
-  });
-
-  /**
-   * Test that the validation fails when the dto is invalid (incorrect task type])
-   */
-  it('should throw an error when a validation error occurs [incorrect task type]', async () => {
-    const task = generateTask({ isStored: false });
-    const taskDto = generateTaskCreateDto(task);
-
-    // @ts-ignore
-    taskDto.type = "fun time holiday"
-
-    validate(taskDto).then(errors => {
-      expect(errors.length).toEqual(1);
-
-      expect(errors[0].constraints).toEqual({
-        isEnum: 'type must be one of the following values: break, work'
-      });
-    });
   });
 
   /**
@@ -445,3 +348,156 @@ describe('TaskService', () => {
     const schedule = generateSchedule({ isStored: true });
   });
 });
+
+describe('TaskService Validation', () => {
+  /**
+   * Test that the validation fails when the dto is invalid (missing required fields [accountId])
+   */
+  it('should throw an error when a validation error occurs [accountId]', async () => {
+    const task = generateTask({ isStored: false });
+    const taskDto = generateTaskCreateDto(task);
+
+    taskDto.accountId = ""
+
+    validate(taskDto).then(errors => {
+      expect(errors.length).toEqual(1);
+
+      expect(errors[0].constraints).toEqual({
+        isNotEmpty: 'accountId should not be empty',
+      });
+    });
+  });
+
+  /**
+   * Test that the validation fails when the dto is invalid (missing required fields [scheduleId empty])
+   */
+  it('should throw an error when a validation error occurs [scheduleId empty]', async () => {
+    const task = generateTask({ isStored: false });
+    const taskDto = generateTaskCreateDto(task);
+
+    taskDto.scheduleId = ""
+
+    validate(taskDto).then(errors => {
+      expect(errors.length).toEqual(1);
+
+      expect(errors[0].constraints).toEqual({
+        isNotEmpty: 'scheduleId should not be empty',
+      });
+    });
+  });
+
+  /**
+   * Test that the validation fails when the dto is invalid (missing required fields [startTime empty])
+   */
+  it('should throw an error when a validation error occurs [startTime empty]', async () => {
+    const task = generateTask({ isStored: false });
+    const taskDto = generateTaskCreateDto(task);
+
+    taskDto.startTime = ""
+
+    validate(taskDto).then(errors => {
+      expect(errors.length).toEqual(1);
+
+      expect(errors[0].constraints).toEqual({
+        isNotEmpty: 'startTime should not be empty',
+      });
+    });
+  });
+
+  /**
+   * Test that the validation fails when the dto is invalid (missing required fields [duration empty])
+   */
+  it('should throw an error when a validation error occurs [duration empty]', async () => {
+    const task = generateTask({ isStored: false });
+    const taskDto = generateTaskCreateDto(task);
+
+    // @ts-ignore
+    taskDto.duration = ""
+
+    validate(taskDto).then(errors => {
+      expect(errors.length).toEqual(1);
+
+      expect(errors[0].constraints).toEqual({
+        isNumber: 'duration must be a number conforming to the specified constraints',
+        isNotEmpty: 'duration should not be empty'
+      });
+    });
+  });
+
+  /**
+   * Test that the validation fails when the dto is invalid (missing required fields [duration no number])
+   */
+  it('should throw an error when a validation error occurs [duration not a number]', async () => {
+    const task = generateTask({ isStored: false });
+    const taskDto = generateTaskCreateDto(task);
+
+    // @ts-ignore
+    taskDto.duration = "not a number"
+
+    validate(taskDto).then(errors => {
+      expect(errors.length).toEqual(1);
+
+      expect(errors[0].constraints).toEqual({
+        isNumber: 'duration must be a number conforming to the specified constraints'
+      });
+    });
+  });
+
+  /**
+   * Test that the validation fails when the dto is invalid (incorrect task type])
+   */
+  it('should throw an error when a validation error occurs [incorrect task type]', async () => {
+    const task = generateTask({ isStored: false });
+    const taskDto = generateTaskCreateDto(task);
+
+    // @ts-ignore
+    taskDto.type = "fun time holiday"
+
+    validate(taskDto).then(errors => {
+      expect(errors.length).toEqual(1);
+
+      expect(errors[0].constraints).toEqual({
+        isEnum: 'type must be one of the following values: break, work'
+      });
+    });
+  });
+
+  /**
+   * Test that the validation fails when the dto is invalid (ID empty/missing/non-UUID) - task fetch
+   */
+  it('should throw an error when a validation error occurs [ID not valid UUID] for fetch', async () => {
+    const schedule = generateSchedule({ isStored: true });
+    const fetchDto = new TaskFetchDto();
+
+    // @ts-ignore
+    fetchDto.id = "<not-a-uuid>"
+
+    validate(fetchDto).then(errors => {
+      expect(errors.length).toEqual(1);
+
+      expect(errors[0].constraints).toEqual({
+        isUuid: 'id must be a UUID'
+      });
+    });
+  });
+
+  /**
+   * Test that the validation fails when the dto is invalid (ID empty/missing/non-UUID) - task update
+   * 
+   */
+  it('should throw an error when a validation error occurs [ID not valid UUID] for task update', async () => {
+    const task = generateTask({ isStored: true });
+    const updateDto = generateTaskUpdateDto(task);
+
+    // @ts-ignore
+    updateDto.id = "<not-a-uuid>"
+
+    validate(updateDto).then(errors => {
+      expect(errors.length).toEqual(1);
+
+      expect(errors[0].constraints).toEqual({
+        isUuid: 'id must be a UUID'
+      });
+    });
+  });
+}); 
