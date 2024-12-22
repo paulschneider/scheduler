@@ -80,7 +80,7 @@ export class TaskService {
     const task = await this.fetchTask(taskUpdateData.id);
 
     if (!task.success) {
-      throw new ResourceNotFound(responses.task.delete.notFound);
+      throw new ResourceNotFound(responses.task.fetch.notFound);
     }
 
     try {
