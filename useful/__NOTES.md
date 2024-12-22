@@ -49,7 +49,11 @@ Fetching all schedules will return all the tasks associated with those schedules
 
 ## Configuration
 
+```You only need to do this if you want to run the app locally```
+
 There is an example ENV file in the useful directory called '.env.example'. You must create a new file called '.env' in the root of the project and populate it with the correct values. Running the local test suite does not require these values and will instead use .test.env from the root of the project.
+
+```You must do this (below) to run the local test suite```
 
 .test.env is included in the repositiory as test.env and will need to be renamed to .test.env before running the local test suite.
 
@@ -98,7 +102,7 @@ There is a collection of requests in the Insomnia file in 'useful/Insomnia_2024-
 
 ## Testing with Vercel & Insomnia
 
-The easiest way to test the API is to use the Insomnia collection attached to the 'remote' environment (this is an option in the Insomnia collection). However, you will need to set the baseUrl environment variable to the URL of the Vercel deployment. You must also set the apiKey header variable to the API key.
+The easiest way to test the API is to use the Insomnia collection attached to the 'remote' environment (this is an option in the Insomnia collection). However, you will need to set the ```baseUrl``` environment variable to the URL of the Vercel deployment. You **must** also set the ```apiKey``` header variable to the API key.
 
 ## Further work to be done
 
