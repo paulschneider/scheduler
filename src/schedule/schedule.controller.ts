@@ -28,7 +28,7 @@ export class ScheduleController {
    * 
    * @returns 
    */
-  @Get()
+  @Get('all')
   async fetchAll(): Promise<ApiResponse<Schedule[]>> {
     return this.scheduleService.fetchAll();
   }

@@ -64,8 +64,10 @@ export const generateScheduleUpdateDto = (schedule: StoredSchedule): ScheduleUpd
  * @param isStored - Whether the task should be fictionally stored in the database
  * @returns A task object (Task | StoredTask)
  */
-export const generateTask = ({ isStored = false }: { isStored?: boolean }): Task => {
-  const schedule = generateSchedule({ isStored: true }) as StoredSchedule;
+export const generateTaskCreatePayload = (schedule: StoredSchedule | null = null): Task => {
+  if (!schedule) {
+    schedule = generateSchedule({ isStored: true }) as StoredSchedule;
+  }
 
   return {
     accountId: faker.number.int({ min: 1, max: 180 }),
@@ -82,16 +84,14 @@ export const generateTask = ({ isStored = false }: { isStored?: boolean }): Task
  * @param isStored - Whether the task should be fictionally stored in the database
  * @returns A task object (Task | StoredTask)
  */
-export const generateStoredTask = ({ isStored = true }: { isStored?: boolean }): StoredTask => {
-  const schedule = generateSchedule({ isStored: true }) as StoredSchedule;
-
+export const generateStoredTask = (payload: Task): StoredTask => {
   return {
     id: faker.string.uuid(),
-    account_id: faker.number.int({ min: 1, max: 180 }),
-    schedule_id: schedule.id,
-    start_time: new Date(),
-    duration: faker.number.int({ min: 1, max: 180 }),
-    type: faker.helpers.arrayElement(["work", "break"]) as TaskType,
+    account_id: payload.accountId,
+    schedule_id: payload.scheduleId,
+    start_time: payload.startTime,
+    duration: payload.duration,
+    type: payload.type,
     created_at: new Date(),
   };
 };
@@ -120,13 +120,13 @@ export const generateTaskCreateDto = (task: Task): TaskCreateDto => {
  * @param task - The task to generate the dto for
  * @returns A task update dto
  */
-export const generateTaskUpdateDto = (task: UpdatableTask): TaskUpdateDto => {
+export const generateTaskUpdateDto = (task: StoredTask): TaskUpdateDto => {
   const taskUpdateDto = new TaskUpdateDto()
 
   taskUpdateDto.id = task.id
-  taskUpdateDto.accountId = task.accountId
-  taskUpdateDto.scheduleId = task.scheduleId
-  taskUpdateDto.startTime = task.startTime.toISOString()
+  taskUpdateDto.accountId = task.account_id
+  taskUpdateDto.scheduleId = task.schedule_id
+  taskUpdateDto.startTime = task.start_time.toISOString()
   taskUpdateDto.duration = task.duration
   taskUpdateDto.type = task.type as TaskType
 

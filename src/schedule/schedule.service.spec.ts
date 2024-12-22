@@ -15,7 +15,8 @@ import {
   generateSchedule,
   generateScheduleCreateDto,
   generateScheduleUpdateDto,
-  generateTask
+  generateTaskCreatePayload,
+  generateStoredTask,
 } from '../../test/helpers/generators';
 import { responses } from '../common/messages/responses';
 import { StoredSchedule } from './types/schedule-types';
@@ -246,11 +247,16 @@ describe('ScheduleService', () => {
 
     scheduleFetchDto.id = schedule.id;
 
-    schedule.tasks = [
-      generateTask({ isStored: true }),
-      generateTask({ isStored: true }),
-      generateTask({ isStored: true }),
-    ];
+    const payload1 = generateTaskCreatePayload();
+    const storedTask1 = generateStoredTask(payload1);
+
+    const payload2 = generateTaskCreatePayload();
+    const storedTask2 = generateStoredTask(payload2);
+
+    const payload3 = generateTaskCreatePayload();
+    const storedTask3 = generateStoredTask(payload3);
+
+    schedule.tasks = [storedTask1, storedTask2, storedTask3];
 
     const expectedResponse = {
       success: true,

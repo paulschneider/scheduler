@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
-import { generateSchedule, generateTask } from './helpers/generators';
+import { generateSchedule, generateTaskCreatePayload, generateStoredTask } from './helpers/generators';
 import { responses } from '../src/common/messages/responses';
 import { ConfigModule } from '@nestjs/config';
 import configuration from '../config/configuration';
@@ -19,13 +19,12 @@ import { createStoredSchedule } from './schedule.e2e-spec';
  */
 export const createStoredTask = async (app: INestApplication, apiKey: string, schedule: StoredSchedule): Promise<StoredTask> => {
   // create a task to store and later retrieve
-  const newTask = generateTask({ isStored: true });
-  newTask.scheduleId = schedule.id;
+  const payload = generateTaskCreatePayload(schedule)
 
   const res = await request(app.getHttpServer())
     .post('/task')
     .set('apiKey', apiKey)
-    .send(newTask)
+    .send(payload)
 
   // make sure the task was created successfully
   expect(res.status).toEqual(201)
@@ -60,13 +59,13 @@ describe('Task (e2e)', () => {
   it('Can make a POST request to create a new task', async () => {
     const schedule = await createStoredSchedule(app, apiKey)
 
-    const newTask = generateTask({ isStored: false });
-    newTask.scheduleId = schedule.id;
+    // create a task to store and later retrieve
+    const payload = generateTaskCreatePayload(schedule)
 
     const taskRes = await request(app.getHttpServer())
       .post('/task')
       .set('apiKey', apiKey)
-      .send(newTask)
+      .send(payload)
 
     expect(taskRes.status).toEqual(201)
     expect(taskRes.body.data.schedule_id).toEqual(schedule.id)
@@ -171,13 +170,12 @@ describe('Task (e2e)', () => {
     const schedule = await createStoredSchedule(app, apiKey)
 
     // create a task to store and later retrieve
-    const newTask = generateTask({ isStored: false });
-    newTask.scheduleId = schedule.id;
+    const payload = generateTaskCreatePayload(schedule)
 
     const res = await request(app.getHttpServer())
       .post('/task')
       .set('apiKey', apiKey)
-      .send(newTask)
+      .send(payload)
 
     // make sure the task was created successfully
     expect(res.status).toEqual(201)
