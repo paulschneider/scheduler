@@ -3,6 +3,7 @@ import {
   createClient,
   SupabaseClient,
   User as SupabaseUser,
+  PostgrestSingleResponse,
 } from '@supabase/supabase-js';
 import { ConfigService } from '@nestjs/config';
 import { Database } from './types/database.types';

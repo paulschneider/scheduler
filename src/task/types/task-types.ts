@@ -1,8 +1,8 @@
 export type Task = {
   id: string;
-  account_id: string;
-  schedule_id: string;
-  start_time: Date;
+  accountId: string;
+  scheduleId: string;
+  startTime: Date;
   duration: number;
   type: 'break' | 'work';
 };

@@ -48,8 +48,6 @@ export class ServiceAuthMiddleware implements NestMiddleware {
         );
       }
 
-      console.log('API key is valid');
-
       // If we've made it this far, we're good to go
       return next();
     }

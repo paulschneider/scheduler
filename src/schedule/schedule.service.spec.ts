@@ -7,67 +7,18 @@ import { createMock } from '@golevelup/ts-jest';
 import { ScheduleModule } from './schedule.module';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { faker } from '@faker-js/faker';
-import { Schedule, StoredSchedule } from '../types';
-import { ScheduleCreateDto } from './dto/schedule-create.dto';
-import { ScheduleUpdateDto } from './dto/schedule-update.dto';
 import { ScheduleFetchDto } from './dto/schedule-fetch.dto';
 import { InternalSystemError } from '../exceptions';
 import { validate } from 'class-validator';
-import { generateTask } from '../task/task.service.spec';
-/**
- * Generate a schedule
- * 
- * @param isStored - Whether the schedule should be fictionally stored in the database
- * @returns A schedule object (Schedule | StoredSchedule)
- */
-export const generateSchedule = ({ isStored = false }: { isStored?: boolean }): Schedule | StoredSchedule => {
-  const schedule = {
-    name: 'Schedule ' + faker.helpers.arrayElement(['1', '2', '3', '4', '5']),
-    description: faker.lorem.lines(2),
-    start_date: new Date(),
-    end_date: new Date(),
-  };
-
-  return isStored ?
-    { id: faker.string.uuid(), ...schedule } as StoredSchedule
-    : schedule as Schedule;
-};
-
-/**
- * Generate a schedule create dto
- * 
- * @param schedule - The schedule to generate the dto for
- * @returns A schedule create dto
- */
-const generateScheduleCreateDto = (schedule: Schedule): ScheduleCreateDto => {
-  const scheduleCreateDto = new ScheduleCreateDto()
-
-  scheduleCreateDto.name = schedule.name
-  scheduleCreateDto.description = schedule.description
-  scheduleCreateDto.startDate = schedule.start_date.toISOString()
-  scheduleCreateDto.endDate = schedule.end_date.toISOString()
-
-  return scheduleCreateDto
-};
-
-/**
- * Generate a schedule update dto
- * 
- * @param schedule - The schedule to generate the dto for
- * @returns A schedule update dto
- */
-const generateScheduleUpdateDto = (schedule: StoredSchedule): ScheduleUpdateDto => {
-  const dto = new ScheduleUpdateDto()
-
-  dto.id = schedule.id
-  dto.name = schedule.name
-  dto.description = schedule.description
-  dto.startDate = schedule.start_date.toISOString()
-  dto.endDate = schedule.end_date.toISOString()
-
-  return dto
-};
-
+import { ScheduleDeleteDto } from './dto/schedule-delete.dto';
+import {
+  generateSchedule,
+  generateScheduleCreateDto,
+  generateScheduleUpdateDto,
+  generateTask
+} from '../../test/helpers/generators';
+import { responses } from '../common/messages/responses';
+import { StoredSchedule } from './types/schedule-types';
 /**
  * Initialise the test suite and mock dependencies, load the environment variables
  * 
@@ -123,7 +74,7 @@ describe('ScheduleService', () => {
 
     const expectedResponse = {
       success: true,
-      message: 'Schedule created successfully',
+      message: responses.schedule.create.success,
       data: {
         ...schedule,
         id: faker.string.uuid(),
@@ -173,7 +124,7 @@ describe('ScheduleService', () => {
   /**
    * Validate that an error is thrown when the schedule cannot be found
    */
-  it('should throw an error when the schedule cannot be fetched', async () => {
+  it('should throw an error when the system encounters an error fetching the schedule', async () => {
     const scheduleFetchDto = new ScheduleFetchDto();
     scheduleFetchDto.id = faker.string.uuid();
 
@@ -191,9 +142,10 @@ describe('ScheduleService', () => {
    * cannot be found with the provided ID
    *
    */
-  it('should return an error when an invalid ID is provided', async () => {
+  it('should return an error when an unknown ID is provided', async () => {
     const scheduleFetchDto = new ScheduleFetchDto();
-    scheduleFetchDto.id = faker.string.uuid();
+
+    scheduleFetchDto.id = faker.string.uuid(); // random uuid
 
     const expectedResponse = {
       success: false,
@@ -259,7 +211,7 @@ describe('ScheduleService', () => {
    * 
    */
   it('should allow a schedule to be updated', async () => {
-    const schedule = generateSchedule({ isStored: true });
+    const schedule = generateSchedule({ isStored: true }) as StoredSchedule;
     const scheduleUpdateDto = generateScheduleUpdateDto(schedule);
 
     const updatedSchedule = {
@@ -285,9 +237,11 @@ describe('ScheduleService', () => {
   /**
    * Validate that all tasks associated with a schedule can be fetched
    * 
+   * @Note: Is this needed? It's not actually testing anything. Probably better to cover this as
+   * part of the E2E tests
    */
   it('should return all tasks associated with a schedule', async () => {
-    const schedule = generateSchedule({ isStored: true });
+    const schedule = generateSchedule({ isStored: true }) as StoredSchedule;
     const scheduleFetchDto = new ScheduleFetchDto();
 
     scheduleFetchDto.id = schedule.id;
@@ -312,62 +266,119 @@ describe('ScheduleService', () => {
 
     expect(response).toEqual(expectedResponse);
   });
+
+  /**
+   * Validate that a schedule can be deleted
+   * 
+   */
+  it('should test that we are able to delete a schedule', async () => {
+    const schedule = generateSchedule({ isStored: true }) as StoredSchedule;
+    const scheduleDeleteDto = new ScheduleDeleteDto();
+
+    scheduleDeleteDto.id = schedule.id;
+
+    const expectedResponse = {
+      success: true,
+      message: 'Schedule deleted successfully',
+      data: null,
+    };
+
+    jest
+      .spyOn(service, 'deleteSchedule')
+      .mockImplementation(() => Promise.resolve(expectedResponse));
+
+    const response = await service.deleteSchedule(scheduleDeleteDto);
+
+    expect(response).toEqual(expectedResponse);
+  });
+
+  /**
+   * Validate that an error is thrown when the schedule cannot be deleted
+   */
+  it('should throw an error when the schedule cannot be deleted', async () => {
+    const scheduleDeleteDto = new ScheduleDeleteDto();
+    scheduleDeleteDto.id = faker.string.uuid();
+
+    jest.spyOn(service, 'deleteSchedule').mockRejectedValue(
+      new InternalSystemError("There was a problem deleting the schedule")
+    );
+
+    expect(async () => {
+      await service.deleteSchedule(scheduleDeleteDto)
+    }).rejects.toThrow("There was a problem deleting the schedule");
+  });
+
+  /**
+   * Validate that an error is thrown when the schedule cannot be found
+   */
+  it('should throw an error when the schedule cannot be found', async () => {
+    const scheduleDeleteDto = new ScheduleDeleteDto();
+    scheduleDeleteDto.id = faker.string.uuid();
+
+    jest.spyOn(service, 'deleteSchedule').mockRejectedValue(
+      new InternalSystemError("Deleting the schedule failed")
+    );
+
+    expect(async () => {
+      await service.deleteSchedule(scheduleDeleteDto)
+    }).rejects.toThrow("Deleting the schedule failed");
+  });
 });
 
 describe('ScheduleService Validation', () => {
   /**
-   * Test that the validation fails when the dto is invalid (name empty/missing) - create
+   * Test that the validation fails when the dto is invalid (accountId empty/missing) - create
    */
   it('should throw an error when a validation error occurs [name missing]', async () => {
     const schedule = generateSchedule({ isStored: false });
     const scheduleDto = generateScheduleCreateDto(schedule);
 
     // @ts-ignore
-    scheduleDto.name = ""
+    scheduleDto.accountId = null
 
     validate(scheduleDto).then(errors => {
       expect(errors.length).toEqual(1);
 
       expect(errors[0].constraints).toEqual({
-        isNotEmpty: 'name should not be empty'
+        isNotEmpty: 'accountId should not be empty'
       });
     });
   });
 
   /**
-   * Test that the validation fails when the dto is invalid (description empty/missing) - create
+   * Test that the validation fails when the dto is invalid (agentId empty/missing) - create
    */
   it('should throw an error when a validation error occurs [description missing]', async () => {
     const schedule = generateSchedule({ isStored: false });
     const scheduleDto = generateScheduleCreateDto(schedule);
 
     // @ts-ignore
-    scheduleDto.description = ""
+    scheduleDto.agentId = null
 
     validate(scheduleDto).then(errors => {
       expect(errors.length).toEqual(1);
 
       expect(errors[0].constraints).toEqual({
-        isNotEmpty: 'description should not be empty'
+        isNotEmpty: 'agentId should not be empty'
       });
     });
   });
 
   /**
-   * Test that the validation fails when the dto is invalid (startDate empty/missing)
+   * Test that the validation fails when the dto is invalid (startTime empty/missing)
    */
-  it('should throw an error when a validation error occurs [startDate missing]', async () => {
+  it('should throw an error when a validation error occurs [startTime missing]', async () => {
     const schedule = generateSchedule({ isStored: false });
     const scheduleDto = generateScheduleCreateDto(schedule);
 
     // @ts-ignore
-    scheduleDto.startDate = ""
+    scheduleDto.startTime = ""
 
     validate(scheduleDto).then(errors => {
       expect(errors.length).toEqual(1);
 
       expect(errors[0].constraints).toEqual({
-        isNotEmpty: 'startDate should not be empty'
+        isNotEmpty: 'startTime should not be empty'
       });
     });
   });
@@ -375,18 +386,18 @@ describe('ScheduleService Validation', () => {
   /**
    * Test that the validation fails when the dto is invalid (endDate empty/missing)
    */
-  it('should throw an error when a validation error occurs [endDate missing]', async () => {
+  it('should throw an error when a validation error occurs [endTime missing]', async () => {
     const schedule = generateSchedule({ isStored: false });
     const scheduleDto = generateScheduleCreateDto(schedule);
 
     // @ts-ignore
-    scheduleDto.endDate = ""
+    scheduleDto.endTime = ""
 
     validate(scheduleDto).then(errors => {
       expect(errors.length).toEqual(1);
 
       expect(errors[0].constraints).toEqual({
-        isNotEmpty: 'endDate should not be empty'
+        isNotEmpty: 'end_time should not be empty'
       });
     });
   });

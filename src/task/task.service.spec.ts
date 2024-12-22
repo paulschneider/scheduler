@@ -6,73 +6,17 @@ import { ConfigModule } from '@nestjs/config';
 import configuration from '../../config/configuration';
 import { TaskModule } from './task.module';
 import { faker } from '@faker-js/faker';
-import { generateSchedule } from '../schedule/schedule.service.spec';
-import { Task, StoredTask, TaskType } from '../types';
 import { Client } from '../supabase/supabase.service';
-import { TaskCreateDto } from './dto/task-create.dto';
-import { TaskUpdateDto } from './dto/task-update.dto';
 import { TaskFetchDto } from './dto/task-fetch.dto';
 import { validate } from 'class-validator';
 import { InternalSystemError, ResourceNotFound } from '../exceptions';
-
-/**
- * Generate a task
- * 
- * @param isStored - Whether the task should be fictionally stored in the database
- * @returns A task object (Task | StoredTask)
- */
-export const generateTask = ({ isStored = false }: { isStored?: boolean }): Task | StoredTask => {
-  const schedule = generateSchedule({ isStored: true });
-
-  const task = {
-    account_id: faker.string.uuid(),
-    schedule_id: schedule.id,
-    start_time: new Date(),
-    duration: faker.number.int({ min: 1, max: 180 }),
-    type: faker.helpers.arrayElement(["work", "break"]),
-  };
-
-  return isStored ?
-    { id: faker.string.uuid(), ...task } as StoredTask
-    : task as Task;
-};
-
-/**
- * Generate a task create dto
- * 
- * @param task - The task to generate the dto for
- * @returns A task create dto
- */
-const generateTaskCreateDto = (task: Task): TaskCreateDto => {
-  const taskCreateDto = new TaskCreateDto()
-
-  taskCreateDto.accountId = task.account_id
-  taskCreateDto.scheduleId = task.schedule_id
-  taskCreateDto.startTime = task.start_time.toISOString()
-  taskCreateDto.duration = task.duration
-  taskCreateDto.type = task.type as TaskType
-
-  return taskCreateDto
-};
-
-/**
- * Generate a task update dto
- * 
- * @param task - The task to generate the dto for
- * @returns A task update dto
- */
-const generateTaskUpdateDto = (task: StoredTask): TaskUpdateDto => {
-  const taskUpdateDto = new TaskUpdateDto()
-
-  taskUpdateDto.id = task.id
-  taskUpdateDto.accountId = task.account_id
-  taskUpdateDto.scheduleId = task.schedule_id
-  taskUpdateDto.startTime = task.start_time.toISOString()
-  taskUpdateDto.duration = task.duration
-  taskUpdateDto.type = task.type as TaskType
-
-  return taskUpdateDto
-};
+import {
+  generateSchedule,
+  generateTask,
+  generateTaskCreateDto,
+  generateTaskUpdateDto
+} from '../../test/helpers/generators';
+import { StoredSchedule } from 'src/types';
 
 /**
  * Initialise the test suite and mock dependencies, load the environment variables
@@ -303,7 +247,7 @@ describe('TaskService', () => {
    * Test that we can fetch all tasks for a given schedule
    */
   it('should return a successful API response when fetching all tasks for a given schedule', async () => {
-    const schedule = generateSchedule({ isStored: true });
+    const schedule = generateSchedule({ isStored: true }) as StoredSchedule;
 
     const tasks = [
       { ...generateTask({ isStored: true }), schedule_id: schedule.id },
@@ -330,7 +274,7 @@ describe('TaskService', () => {
    * Test that the fetchAll method throws an error when there is a problem fetching the tasks
    */
   it('should handle an error during task fetching [problem fetching tasks]', async () => {
-    const schedule = generateSchedule({ isStored: true });
+    const schedule = generateSchedule({ isStored: true }) as StoredSchedule;
 
     jest.spyOn(service, 'fetchAll').mockRejectedValue(() => {
       throw new InternalSystemError("There was a problem fetching the tasks");
@@ -339,13 +283,6 @@ describe('TaskService', () => {
     expect(async () => {
       await service.fetchAll(schedule.id);
     }).rejects.toThrow("There was a problem fetching the tasks");
-  });
-
-  /**
-   * Test that the fetchAll method throws an error when there are no tasks found
-   */
-  it('should handle an error during task fetching [no tasks found]', async () => {
-    const schedule = generateSchedule({ isStored: true });
   });
 });
 

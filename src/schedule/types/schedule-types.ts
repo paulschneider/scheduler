@@ -1,14 +1,13 @@
 import { Task } from "../../types";
 
 export type Schedule = {
-  id: string;
-  name: string;
-  description: string;
-  start_date: Date;
-  end_date: Date;
-  tasks: Task[];
+  accountId: number;
+  agentId: number;
+  startTime: Date;
+  endTime: Date;
 };
 
 export type StoredSchedule = Schedule & {
   id: string;
+  tasks: Task[];
 };

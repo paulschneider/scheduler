@@ -2,14 +2,14 @@ import { IsNotEmpty } from 'class-validator';
 
 export class ScheduleCreateDto {
   @IsNotEmpty()
-  name: string;
+  accountId: number;
 
   @IsNotEmpty()
-  description: string;
+  agentId: number;
 
   @IsNotEmpty()
-  startDate: string;
+  startTime: string;
 
   @IsNotEmpty()
-  endDate: string;
+  endTime: string;
 }
