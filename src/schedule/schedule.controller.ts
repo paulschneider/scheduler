@@ -12,6 +12,16 @@ export class ScheduleController {
   constructor(private readonly scheduleService: ScheduleService) { }
 
   /**
+   * Fetch all schedules
+   * 
+   * @returns 
+   */
+  @Get('all')
+  async fetchAll(): Promise<ApiResponse<Schedule[]>> {
+    return this.scheduleService.fetchAll();
+  }
+
+  /**
    * Fetch a schedule by id
    * 
    * @param scheduleFetchDto 
@@ -21,16 +31,6 @@ export class ScheduleController {
   @UsePipes(new ValidationPipe({ transform: true }))
   async fetch(@Param() params: ScheduleFetchDto): Promise<ApiResponse<Schedule | null>> {
     return this.scheduleService.fetch(params);
-  }
-
-  /**
-   * Fetch all schedules
-   * 
-   * @returns 
-   */
-  @Get('all')
-  async fetchAll(): Promise<ApiResponse<Schedule[]>> {
-    return this.scheduleService.fetchAll();
   }
 
   /**
